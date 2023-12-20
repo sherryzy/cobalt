@@ -220,7 +220,7 @@ void GrCCFiller::PathInfo::tessellateFan(
         vertices[i].fWinding = weight;
     }
 
-    fFanTessellation.reset(static_cast<const GrTessellator::WindingVertex*>(vertices));
+    fFanTessellation.reset(vertices);
 }
 
 GrCCFiller::BatchID GrCCFiller::closeCurrentBatch() {

@@ -10,35 +10,7 @@
 #include "include/private/GrTypesPriv.h"
 #include "src/gpu/GrDataUtils.h"
 #include "src/gpu/gl/GrGLUtil.h"
-
-///////////////////////////////////////////////////////////////////////////////
-
-#if GR_GL_LOG_CALLS
-bool gLogCallsGL = !!(GR_GL_LOG_CALLS_START);
-#endif
-
-#if GR_GL_CHECK_ERROR
-bool gCheckErrorGL = !!(GR_GL_CHECK_ERROR_START);
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
-
 #include <stdio.h>
-
-#if defined(STARBOARD)
-#include "starboard/egl.h"
-#define EGLint SbEglInt32
-#define EGLBoolean SbEglBoolean
-#define EGL_CONTEXT_CLIENT_TYPE SB_EGL_CONTEXT_CLIENT_TYPE
-#define EGL_OPENGL_ES_API SB_EGL_OPENGL_ES_API
-#define EGL_CONTEXT_CLIENT_VERSION SB_EGL_CONTEXT_CLIENT_VERSION
-#define EGL_CALL_PREFIX ::SkiaGetEglInterface().
-#else  // !defined(STARBOARD)
-#include <EGL/egl.h>
-#define EGL_CALL_PREFIX
-#endif  // defined(STARBOARD)
-
-#define EGL_CALL_SIMPLE(x) (EGL_CALL_PREFIX x)
 
 void GrGLClearErr(const GrGLInterface* gl) {
     while (GR_GL_NO_ERROR != gl->fFunctions.fGetError()) {}
@@ -62,16 +34,7 @@ const char *get_error_string(uint32_t err) {
     }
     return "Unknown";
 }
-
-#if defined(STARBOARD)
-const SbEglInterface& SkiaGetEglInterface() {
-    static const SbEglInterface* egl_interface = SbGetEglInterface();
-
-    return *egl_interface;
 }
-#endif  // defined(STARBOARD)
-
-}  // namespace
 
 void GrGLCheckErr(const GrGLInterface* gl,
                   const char* location,
@@ -88,6 +51,18 @@ void GrGLCheckErr(const GrGLInterface* gl,
         SkDebugf("\n");
     }
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+#if GR_GL_LOG_CALLS
+    bool gLogCallsGL = !!(GR_GL_LOG_CALLS_START);
+#endif
+
+#if GR_GL_CHECK_ERROR
+    bool gCheckErrorGL = !!(GR_GL_CHECK_ERROR_START);
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
 
 GrGLStandard GrGLGetStandardInUseFromString(const char* versionString) {
     if (nullptr == versionString) {
@@ -255,15 +230,6 @@ GrGLVersion GrGLGetVersionFromString(const char* versionString) {
         return GR_GL_INVALID_VER;
     }
 
-#if defined(STARBOARD) && !defined(GLES3_SUPPORTED)
-    // If we are in a build that does not support GLES3 (or it is explicitly
-    // disabled), ensure that Skia returns GLES2 as the version being used by
-    // performing the check before attempting to parse the string below.
-    if (strstr(versionString, "OpenGL ES")) {
-        return GR_GL_VER(2, 0);
-    }
-#endif
-
     int major, minor;
 
     // check for mesa
@@ -277,44 +243,6 @@ GrGLVersion GrGLGetVersionFromString(const char* versionString) {
     if (2 == n) {
         return GR_GL_VER(major, minor);
     }
-
-#if defined(STARBOARD)
-    // Use API calls to find out the version for OpenGL ES
-    // over using string parsing to determine the correct version.
-    //
-    // This is useful when a OpenGL 2.0 context is requested and received, but
-    // the version string still shows version 3.0
-    if (strstr(versionString, "OpenGL ES")) {
-        EGLint client_type = -1;
-        EGLBoolean success = false;
-        do {
-            success = EGL_CALL_SIMPLE(eglQueryContext(EGL_CALL_SIMPLE(eglGetCurrentDisplay()),
-                                                      EGL_CALL_SIMPLE(eglGetCurrentContext()),
-                                                      EGL_CONTEXT_CLIENT_TYPE, &client_type));
-            if (!success || (client_type != EGL_OPENGL_ES_API)) {
-                break;
-            }
-            EGLint client_version = -1;
-            success = EGL_CALL_SIMPLE(eglQueryContext(EGL_CALL_SIMPLE(eglGetCurrentDisplay()),
-                                                      EGL_CALL_SIMPLE(eglGetCurrentContext()),
-                                                      EGL_CONTEXT_CLIENT_VERSION,
-                                                      &client_version));
-            if (!success) {
-                break;
-            }
-#if defined(COBALT)
-            if (strstr(versionString, "Mesa")) {
-              // Some Mesa implementations, e.g. OpenGL ES 3.0 Mesa 11.2.0,
-              // will claim GL version 3.0, but do not adhere to the spec.
-              // E.g. it still requires internal and external formats for
-              // 2D textures to be the same.
-              client_version = SkTMin(client_version, 2);
-            }
-#endif
-            return GR_GL_VER(client_version, 0);
-        } while (0);
-    }
-#endif  // defined(STARBOARD)
 
     // WebGL might look like "OpenGL ES 2.0 (WebGL 1.0 (OpenGL ES 2.0 Chromium))"
     int esMajor, esMinor;
@@ -566,9 +494,6 @@ GrGLRenderer GrGLGetRendererFromStrings(const char* rendererString,
         }
 
         if (strstr(rendererString, "llvmpipe")) {
-            return kGalliumLLVM_GrGLRenderer;
-        }
-        if (strstr(rendererString, "llvmpipe") || strstr(rendererString, "Gallium ")) {
             return kGalliumLLVM_GrGLRenderer;
         }
         static const char kMaliTStr[] = "Mali-T";

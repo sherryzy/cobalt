@@ -362,7 +362,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::RunInSeries(
     // Run the through the series, do the invariant output processing, and look for eliminations.
     GrProcessorAnalysisColor inputColor;
     inputColor.setToUnknown();
-    GrColorFragmentProcessorAnalysis info(inputColor, unique_ptr_array_to_unique_const_ptr_array(series),
+    GrColorFragmentProcessorAnalysis info(inputColor, unique_ptr_address_as_pointer_address(series),
                                           cnt);
     SkTArray<std::unique_ptr<GrFragmentProcessor>> replacementSeries;
     SkPMColor4f knownColor;

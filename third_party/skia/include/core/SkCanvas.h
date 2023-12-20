@@ -291,15 +291,6 @@ public:
      */
     SkSurface* getSurface() const;
 
-#if defined(COBALT)
-    /**
-     * Return the framebuffer object identifier for the render target, if
-     * applicable.
-     * NOTE: This will cause a flush, so use sparingly.
-     */
-    intptr_t getRenderTargetHandle() const;
-#endif
-
     /** Returns the pixel base address, SkImageInfo, rowBytes, and origin if the pixels
         can be read directly. The returned address is only valid
         while SkCanvas is in scope and unchanged. Any SkCanvas call or SkSurface call

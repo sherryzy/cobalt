@@ -1775,20 +1775,6 @@ GrContext* SkCanvas::getGrContext() {
     return device ? device->context() : nullptr;
 }
 
-#if defined(COBALT)
-intptr_t SkCanvas::getRenderTargetHandle() const {
-    if (fSurfaceBase) {
-        GrBackendRenderTarget target =
-                fSurfaceBase->getBackendRenderTarget(SkSurface::kFlushRead_BackendHandleAccess);
-        GrGLFramebufferInfo info;
-        if (target.getGLFramebufferInfo(&info)) {
-            return info.fFBOID;
-        }
-    }
-    return 0;
-}
-#endif
-
 void SkCanvas::drawDRRect(const SkRRect& outer, const SkRRect& inner,
                           const SkPaint& paint) {
     TRACE_EVENT0("skia", TRACE_FUNC);

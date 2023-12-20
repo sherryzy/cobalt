@@ -55,13 +55,7 @@ GrGLCaps::GrGLCaps(const GrContextOptions& contextOptions,
     fDoManualMipmapping = false;
     fClearToBoundaryValuesIsBroken = false;
     fClearTextureSupport = false;
-#if defined(COBALT)
-    // On some GL implementations, this feature might not be implemented.
-    // In the interest of greater compatibility, this feature is disabled.
-    fDrawArraysBaseVertexIsBroken = true;
-#else
     fDrawArraysBaseVertexIsBroken = false;
-#endif
     fDisallowTexSubImageForUnormConfigTexturesEverBoundToFBO = false;
     fUseDrawInsteadOfAllRenderTargetWrites = false;
     fRequiresCullFaceEnableDisableWhenDrawingLinesAfterNonLines = false;
@@ -152,34 +146,6 @@ void GrGLCaps::init(const GrContextOptions& contextOptions,
     } else if (GR_IS_GR_GL_ES(standard)) {
         fSampleLocationsSupport = version >= GR_GL_VER(3,1);
     }  // no WebGL support
-
-    bool textureRedSupport = false;
-    if (kGL_GrGLStandard == standard) {
-        textureRedSupport = version >= GR_GL_VER(3, 0) || ctxInfo.hasExtension("GL_ARB_texture_rg");
-    } else {
-        textureRedSupport = version >= GR_GL_VER(3, 0) || ctxInfo.hasExtension("GL_EXT_texture_rg");
-    }
-
-    if (textureRedSupport) {
-        // Some devices claim to support GL_RED, but actually do not, so we
-        // verify support by actually attempting to create a GL_RED texture.
-        // As an example, one device was found to claim GLES 3.0 support, but
-        // could not create GL_RED textures.
-        GrGLenum error;
-        GrGLuint texture_id;
-        GR_GL_CALL(gli, GenTextures(1, &texture_id));
-        GR_GL_CALL(gli, BindTexture(GR_GL_TEXTURE_2D, texture_id));
-        GR_GL_CALL_NOERRCHECK(gli, TexImage2D(GR_GL_TEXTURE_2D, 0, GR_GL_RED, 64, 64, 0, GR_GL_RED,
-                                              GR_GL_UNSIGNED_BYTE, 0));
-        GR_GL_CALL_RET(gli, error, GetError());
-        if (error != GR_GL_NO_ERROR) {
-            // There was an error creating the texture, do not advertise GL_RED
-            // support.
-            textureRedSupport = false;
-        }
-        GR_GL_CALL(gli, BindTexture(GR_GL_TEXTURE_2D, 0));
-        GR_GL_CALL(gli, DeleteTextures(1, &texture_id));
-    }
 
     fImagingSupport = GR_IS_GR_GL(standard) &&
                       ctxInfo.hasExtension("GL_ARB_imaging");
@@ -577,19 +543,6 @@ void GrGLCaps::init(const GrContextOptions& contextOptions,
     }
 
     GR_GL_GetIntegerv(gli, GR_GL_MAX_RENDERBUFFER_SIZE, &fMaxRenderTargetSize);
-
-#if defined(COBALT)
-    if (ctxInfo.renderer() == kGalliumLLVM_GrGLRenderer) {
-      // The Gallium renderer claims to support a max texture size of 8K.
-      // However, attempting to create 4k x 2k texture fails under this
-      // implementation.  Creating a 2k x 2k texture succeeds, so the new limit
-      // is set to 2048.
-      const int kRealMaxTextureSize = 2048;
-      fMaxTextureSize = SkTMin(kRealMaxTextureSize, fMaxTextureSize);
-      fMaxRenderTargetSize = SkTMin(kRealMaxTextureSize, fMaxRenderTargetSize);
-    }
-#endif
-
     // Our render targets are always created with textures as the color
     // attachment, hence this min:
     fMaxRenderTargetSize = SkTMin(fMaxTextureSize, fMaxRenderTargetSize);
@@ -604,16 +557,6 @@ void GrGLCaps::init(const GrContextOptions& contextOptions,
 
     // Disable scratch texture reuse on Mali and Adreno devices
     fReuseScratchTextures = kARM_GrGLVendor != ctxInfo.vendor();
-
-#if defined(COBALT)
-    // A crash issue was found on the Nexus Player within the PowerVR GLES
-    // driver when uploading new data to reuse scratch textures, so disable
-    // scratch texture reuse on that device.
-    if (kImagination_GrGLVendor == ctxInfo.vendor() &&
-        kPowerVRRogue_GrGLRenderer == ctxInfo.renderer()) {
-        fReuseScratchTextures = false;
-    }
-#endif
 
 #if 0
     fReuseScratchBuffers = kARM_GrGLVendor != ctxInfo.vendor() &&
@@ -1355,6 +1298,13 @@ void GrGLCaps::initFormatTable(const GrGLContextInfo& ctxInfo, const GrGLInterfa
     if (fDriverBugWorkarounds.disable_texture_storage) {
         texStorageSupported = false;
     }
+#ifdef SK_BUILD_FOR_ANDROID
+    // crbug.com/945506. Telemetry reported a memory usage regression for Android Go Chrome/WebView
+    // when using glTexStorage2D. This appears to affect OOP-R (so not just over command buffer).
+    if (!formatWorkarounds.fDontDisableTexStorageOnAndroid) {
+        texStorageSupported = false;
+    }
+#endif
 
     // ES 2.0 requires that the internal/external formats match so we can't use sized internal
     // formats for glTexImage until ES 3.0. TODO: Support sized internal formats in WebGL2.
@@ -1389,19 +1339,10 @@ void GrGLCaps::initFormatTable(const GrGLContextInfo& ctxInfo, const GrGLInterfa
         if (GR_IS_GR_GL(standard)) {
             info.fFlags |= msaaRenderFlags;
         } else if (GR_IS_GR_GL_ES(standard)) {
-#if defined(STARBOARD)
-            // Starboard code in GrGLUtil.cpp may override the driver version
-            // from GLES 3.0 to 2.0 if the config specifies that only GLES 2.0
-            // features should be used. This will confuse the regular
-            // capabilities check. Since all Starboard GLES platforms must
-            // support rendering to RGBA8 buffers, no check is needed here.
-            info.fFlags |= msaaRenderFlags;
-#else
             if (version >= GR_GL_VER(3,0) || ctxInfo.hasExtension("GL_OES_rgb8_rgba8") ||
                 ctxInfo.hasExtension("GL_ARM_rgba8")) {
                 info.fFlags |= msaaRenderFlags;
             }
-#endif
         } else if (GR_IS_GR_WEBGL(standard)) {
             info.fFlags |= msaaRenderFlags;
         }
@@ -1520,11 +1461,6 @@ void GrGLCaps::initFormatTable(const GrGLContextInfo& ctxInfo, const GrGLInterfa
         } else if (GR_IS_GR_WEBGL(standard)) {
             r8Support = ctxInfo.version() >= GR_GL_VER(2, 0);
         }
-// TODO: Disable R8 texture support to force similar rendering paths.
-// R8 support currently breaks text rendering.
-#if defined(COBALT)
-        r8Support = false;
-#endif
 
         if (r8Support) {
             info.fFlags |= FormatInfo::kTexturable_Flag | msaaRenderFlags;

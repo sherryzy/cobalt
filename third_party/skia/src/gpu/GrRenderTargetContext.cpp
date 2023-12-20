@@ -1618,7 +1618,7 @@ public:
         if (result.fPixelConverter) {
             std::unique_ptr<char[]> convertedData(new char[rowBytes * dimensions.height()]);
             result.fPixelConverter(convertedData.get(), mappedData);
-            this->addCpuPlane(convertedData.release(), rowBytes);
+            this->addCpuPlane(std::move(convertedData), rowBytes);
             result.fTransferBuffer->unmap();
         } else {
             manager->insert(result.fTransferBuffer);
@@ -1627,10 +1627,10 @@ public:
         return true;
     }
 
-    void addCpuPlane(const char* data, size_t rowBytes) {
+    void addCpuPlane(std::unique_ptr<const char[]> data, size_t rowBytes) {
         SkASSERT(data);
         SkASSERT(rowBytes > 0);
-        fPlanes.emplace_back(data, rowBytes, nullptr);
+        fPlanes.emplace_back(data.release(), rowBytes, nullptr);
     }
 
 private:
@@ -1678,7 +1678,7 @@ void GrRenderTargetContext::asyncReadPixels(const SkIRect& rect, SkColorType col
         auto result = skstd::make_unique<AsyncReadResult>(0);
         std::unique_ptr<char[]> data(new char[ii.computeMinByteSize()]);
         SkPixmap pm(ii, data.get(), ii.minRowBytes());
-        result->addCpuPlane(data.release(), pm.rowBytes());
+        result->addCpuPlane(std::move(data), pm.rowBytes());
 
         if (!this->readPixels(ii, pm.writable_addr(), pm.rowBytes(), {rect.fLeft, rect.fTop})) {
             callback(context, nullptr);

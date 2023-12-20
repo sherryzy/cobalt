@@ -12,7 +12,6 @@
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkScalar.h"
 #include "include/private/SkTo.h"
-#include "src/core/SkOSFile.h"  // Included for SkFile.
 
 #include <memory.h>
 
@@ -297,6 +296,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
+#include <stdio.h>
+
 /** A stream that wraps a C FILE* file stream. */
 class SK_API SkFILEStream : public SkStreamAsset {
 public:
@@ -310,7 +311,7 @@ public:
      *  beginning of the SkFILEStream.
      *  The C FILE stream will be closed in the destructor.
      */
-    explicit SkFILEStream(SkFile* file);
+    explicit SkFILEStream(FILE* file);
 
     ~SkFILEStream() override;
 
@@ -344,13 +345,13 @@ public:
     size_t getLength() const override;
 
 private:
-    explicit SkFILEStream(std::shared_ptr<SkFile>, size_t size, size_t offset);
-    explicit SkFILEStream(std::shared_ptr<SkFile>, size_t size, size_t offset, size_t originalOffset);
+    explicit SkFILEStream(std::shared_ptr<FILE>, size_t size, size_t offset);
+    explicit SkFILEStream(std::shared_ptr<FILE>, size_t size, size_t offset, size_t originalOffset);
 
     SkStreamAsset* onDuplicate() const override;
     SkStreamAsset* onFork() const override;
 
-    std::shared_ptr<SkFile> fFILE;
+    std::shared_ptr<FILE> fFILE;
     // My own council will I keep on sizes and offsets.
     size_t fSize;
     size_t fOffset;
@@ -449,7 +450,7 @@ public:
     size_t bytesWritten() const override;
 
 private:
-    SkFile* fFILE;
+    FILE* fFILE;
 
     typedef SkWStream INHERITED;
 };

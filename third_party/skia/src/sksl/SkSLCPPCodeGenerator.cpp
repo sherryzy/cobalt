@@ -13,11 +13,6 @@
 
 #include <algorithm>
 
-#if defined(STARBOARD)
-#include "starboard/client_porting/poem/string_poem.h"
-#include "starboard/common/log.h"
-#endif
-
 namespace SkSL {
 
 static bool needs_uniform_var(const Variable& var) {
@@ -45,7 +40,7 @@ void CPPCodeGenerator::writef(const char* s, va_list va) {
         fOut->write(buffer, length);
     } else {
         std::unique_ptr<char[]> heap(new char[length + 1]);
-        vsnprintf(heap.get(), length + 1, s, copy);
+        vsprintf(heap.get(), s, copy);
         fOut->write(heap.get(), length);
     }
     va_end(copy);

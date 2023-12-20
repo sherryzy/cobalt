@@ -450,12 +450,6 @@ std::unique_ptr<GrRenderTargetContext> GaussianBlur(GrRecordingContext* context,
     SkIRect localSrcBounds = srcBounds;
     SkIPoint localProxyOffset = proxyOffset;
 
-    // In order to reduce the total number of shaders used to implement
-    // convolutions, we always use two passes of 1D convolutions instead
-    // of a combination of 1D convolutions and 2D convolutions depending
-    // on the case.  The downside to this is that we may miss out on
-    // additional performance for these cases.
-#if !defined(COBALT)
     // For really small blurs (certainly no wider than 5x5 on desktop gpus) it is faster to just
     // launch a single non separable kernel vs two launches
     if (sigmaX > 0.0f && sigmaY > 0.0f &&
@@ -469,7 +463,6 @@ std::unique_ptr<GrRenderTargetContext> GaussianBlur(GrRecordingContext* context,
                                     srcOffset, radiusX, radiusY, sigmaX, sigmaY, mode,
                                     finalW, finalH, colorSpace, fit);
     }
-#endif
 
     // Only the last rendered renderTargetContext needs to match the supplied 'fit'
     SkBackingFit xFit = fit, yFit = fit;

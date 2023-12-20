@@ -252,7 +252,7 @@ const char checksumTrailer[] =
 #include "src/core/SkOSFile.h"
 
 bool GenerateChecksums() {
-    SkFile* file = sk_fopen(checksumFileName, kWrite_SkFILE_Flag);
+    FILE* file = sk_fopen(checksumFileName, kWrite_SkFILE_Flag);
     if (!file) {
         SkDebugf("Can't open %s for writing.\n", checksumFileName);
         return false;

@@ -222,13 +222,7 @@ GrGaussianConvolutionFragmentProcessor::GrGaussianConvolutionFragmentProcessor(
                     ModulateForSamplerOptFlags(alphaType, mode == GrTextureDomain::kDecal_Mode))
         , fCoordTransform(proxy.get())
         , fTextureSampler(std::move(proxy))
-#if defined(COBALT)
-        // Limit the number of possible shaders used on Cobalt by
-        // always assuming the maximum width. Performance sadface.
-        , fRadius(kMaxKernelRadius)
-#else
         , fRadius(radius)
-#endif
         , fDirection(direction)
         , fMode(mode) {
     // Make sure the sampler's ctor uses the clamp wrap mode

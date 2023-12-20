@@ -17,10 +17,6 @@
 
 #include <set>
 
-#if defined(STARBOARD)
-#include "starboard/client_porting/poem/string_poem.h"
-#endif
-
 namespace SkSL {
 
 HCodeGenerator::HCodeGenerator(const Context* context, const Program* program,
@@ -113,7 +109,7 @@ void HCodeGenerator::writef(const char* s, va_list va) {
         fOut->write(buffer, length);
     } else {
         std::unique_ptr<char[]> heap(new char[length + 1]);
-        vsnprintf(heap.get(), length + 1, s, copy);
+        vsprintf(heap.get(), s, copy);
         fOut->write(heap.get(), length);
     }
     va_end(copy);

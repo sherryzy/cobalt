@@ -10,7 +10,6 @@
 
 #include <chrono>
 #include "include/core/SkCanvas.h"
-#include "include/core/SkColorPriv.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkPath.h"
@@ -74,17 +73,12 @@ static const int kGrPixelConfigCnt = kLast_GrPixelConfig + 1;
 #ifndef SK_CPU_LENDIAN
 #error "Skia gpu currently assumes little endian"
 #endif
-#if defined(STARBOARD)
-static const GrPixelConfig kSkia8888_GrPixelConfig =
-        (GetSkPmcolor() == SkPmcolorIsBgra) ? kBGRA_8888_GrPixelConfig : kRGBA_8888_GrPixelConfig;
-#else
 #if SK_PMCOLOR_BYTE_ORDER(B,G,R,A)
 static const GrPixelConfig kSkia8888_GrPixelConfig = kBGRA_8888_GrPixelConfig;
 #elif SK_PMCOLOR_BYTE_ORDER(R,G,B,A)
 static const GrPixelConfig kSkia8888_GrPixelConfig = kRGBA_8888_GrPixelConfig;
 #else
     #error "SK_*32_SHIFT values must correspond to GL_BGRA or GL_RGBA format."
-#endif
 #endif
 
 /**
@@ -770,14 +764,10 @@ enum class GrBackendObjectOwnership : bool {
     kOwned = true
 };
 
-// On some platforms, sizeof(T*) != sizeof(std::unique_ptr<T>) so an array of
-// std::unique_ptr<T> cannot be casted to an array of T*.
 template <typename T>
-std::unique_ptr<const T>* unique_ptr_array_to_unique_const_ptr_array(
-    std::unique_ptr<T>* up_array) {
-    static_assert(sizeof(std::unique_ptr<const T>) ==
-                  sizeof(std::unique_ptr<T>), "unique_ptr not expected size.");
-    return reinterpret_cast< std::unique_ptr<const T>* >(up_array);
+T* const* unique_ptr_address_as_pointer_address(std::unique_ptr<T> const* up) {
+    static_assert(sizeof(T*) == sizeof(std::unique_ptr<T>), "unique_ptr not expected size.");
+    return reinterpret_cast<T* const*>(up);
 }
 
 /*

@@ -19,11 +19,6 @@
 #include "include/private/SkOnce.h"
 #endif
 
-#if defined(STARBOARD)
-#include "starboard/common/log.h"
-#define printf(format, ...) SbLogFormatF(format, __VA_ARGS__)
-#endif
-
 namespace SkSL {
 
 void GLSLCodeGenerator::write(const char* s) {

@@ -10,8 +10,6 @@
 
 #include "include/private/SkColorData.h"
 
-#include <memory>
-
 class GrDrawOp;
 class GrFragmentProcessor;
 
@@ -97,7 +95,7 @@ public:
     GrColorFragmentProcessorAnalysis() = delete;
 
     GrColorFragmentProcessorAnalysis(const GrProcessorAnalysisColor& input,
-                                     const std::unique_ptr<const GrFragmentProcessor>* processors,
+                                     const GrFragmentProcessor* const* processors,
                                      int cnt);
 
     bool isOpaque() const { return fIsOpaque; }

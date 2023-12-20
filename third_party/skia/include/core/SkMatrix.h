@@ -1743,7 +1743,7 @@ public:
         if (sx != 1 || sy != 1) {
             mask |= kScale_Mask;
         }
-        if (tx!=0.0f || ty!=0.0f) {
+        if (tx || ty) {
             mask |= kTranslate_Mask;
         }
         this->setTypeMask(mask | kRectStaysRect_Mask);

@@ -7,10 +7,6 @@
 
 // IWYU pragma: private, include "SkTypes.h"
 
-#if defined(STARBOARD)
-#include "starboard/configuration.h"
-#endif
-
 #ifndef SkPreConfig_DEFINED
 #define SkPreConfig_DEFINED
 
