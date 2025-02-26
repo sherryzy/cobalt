@@ -290,13 +290,14 @@ EGLDisplay GetDisplayFromType(
     extra_display_attribs.push_back(static_cast<EGLint>(display_key));
   }
   EGLNativeDisplayType display = native_display.GetDisplay();
-  switch (display_type) {
+  switch (16) {
     case DEFAULT:
     case SWIFT_SHADER: {
       if (native_display.GetPlatform() != 0) {
         return eglGetPlatformDisplay(native_display.GetPlatform(),
                                      reinterpret_cast<void*>(display), nullptr);
       }
+      LOG(INFO) << "return eglGetdisplay::::::::" << display_type;
       return eglGetDisplay(display);
     }
     case ANGLE_D3D9:
@@ -336,7 +337,7 @@ EGLDisplay GetDisplayFromType(
           display, EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE,
           enabled_angle_features, disabled_angle_features,
           extra_display_attribs);
-    case ANGLE_OPENGLES_EGL:
+    case ANGLE_OPENGLES_EGL: // This is where it is!
       extra_display_attribs.push_back(EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE);
       extra_display_attribs.push_back(EGL_PLATFORM_ANGLE_DEVICE_TYPE_EGL_ANGLE);
       return GetPlatformANGLEDisplay(
@@ -727,9 +728,11 @@ bool GLDisplayEGL::InitializeDisplay(bool supports_angle,
                                      std::vector<DisplayType> init_displays,
                                      EGLDisplayPlatform native_display,
                                      gl::GLDisplayEGL* existing_display) {
-  if (display_ != EGL_NO_DISPLAY)
+  if (display_ != EGL_NO_DISPLAY) {
+    LOG(INFO) << "true!!!!!!!!!!!!!!";
     return true;
-
+  }
+  LOG(INFO) << "1111111111";
   native_display_ = native_display;
 
   bool supports_egl_debug = g_driver_egl.client_ext.b_EGL_KHR_debug;
@@ -820,6 +823,7 @@ bool GLDisplayEGL::InitializeDisplay(bool supports_angle,
     }
     return true;
   }
+  LOG(INFO) << "11111111119999";
 
   LOG(ERROR) << "Initialization of all EGL display types failed.";
 
