@@ -156,6 +156,25 @@ public abstract class CobaltActivity extends Activity {
         extraCommandLineArgs.add("--disable-rgba-4444-textures");
       }
 
+      if (javaSwitches.containsKey(JavaSwitches.V8_JITLESS)) {
+        extraCommandLineArgs.add("--js-flags=--jitless");
+      }
+      if (javaSwitches.containsKey(JavaSwitches.V8_WRITE_PROTECT_CODE_MEMORY)) {
+        extraCommandLineArgs.add("--js-flags=--write-protect-code-memory");
+      }
+      if (javaSwitches.containsKey(JavaSwitches.V8_GC_INTERVAL)) {
+        extraCommandLineArgs.add("--js-flags=--gc-interval=" + javaSwitches.get(JavaSwitches.V8_GC_INTERVAL));
+      }
+      if (javaSwitches.containsKey(JavaSwitches.V8_INITIAL_OLD_SPACE_SIZE)) {
+        extraCommandLineArgs.add("--js-flags=--initial-old-space-size=" + javaSwitches.get(JavaSwitches.V8_INITIAL_OLD_SPACE_SIZE));
+      }
+      if (javaSwitches.containsKey(JavaSwitches.V8_MAX_OLD_SPACE_SIZE)) {
+        extraCommandLineArgs.add("--js-flags=--max-old-space-size=" + javaSwitches.get(JavaSwitches.V8_MAX_OLD_SPACE_SIZE));
+      }
+      if (javaSwitches.containsKey(JavaSwitches.V8_MAX_SEMI_SPACE_SIZE)) {
+        extraCommandLineArgs.add("--js-flags=--max-semi-space-size=" + javaSwitches.get(JavaSwitches.V8_MAX_SEMI_SPACE_SIZE));
+      }
+
       if (commandLineArgs != null) {
         // Add all array elements to index 0 of the list
         extraCommandLineArgs.addAll(0, Arrays.asList(commandLineArgs));

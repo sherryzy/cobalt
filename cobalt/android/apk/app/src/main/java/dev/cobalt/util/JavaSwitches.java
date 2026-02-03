@@ -21,4 +21,10 @@ public class JavaSwitches {
   public static final String ENABLE_QUIC = "EnableQUIC";
   public static final String DISABLE_STARTUP_GUARD = "DisableStartupGuard";
   public static final String DISABLE_LOW_END_DEVICE_MODE = "DisableLowEndDeviceMode";
+  public static final String V8_JITLESS = "V8Jitless";
+  public static final String V8_WRITE_PROTECT_CODE_MEMORY = "V8WriteProtectCodeMemory";
+  public static final String V8_GC_INTERVAL = "V8GcInterval";
+  public static final String V8_INITIAL_OLD_SPACE_SIZE = "V8InitialOldSpaceSize";
+  public static final String V8_MAX_OLD_SPACE_SIZE = "V8MaxOldSpaceSize";
+  public static final String V8_MAX_SEMI_SPACE_SIZE = "V8MaxSemiSpaceSize";
 }
